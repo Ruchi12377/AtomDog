@@ -99,3 +99,10 @@ StackChan Minimal は、VOICEVOXおよび各音声ライブラリの権利者に
 This project is licensed under the Apache License 2.0.
 
 Third-party library licenses are listed in `third_party_licenses/`.
+
+## 入門PDF
+
+Stack-Chan Minimal の概要、セットアップ、Web Installer、ローカルAIサーバー連携をまとめた入門PDFをBOOTHで公開しました。
+
+「はじめての Stack-Chan Minimal（ミニマル）」PDF版
+https://a-utaworks.booth.pm/items/8315379
