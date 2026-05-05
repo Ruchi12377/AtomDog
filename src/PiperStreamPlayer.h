@@ -169,10 +169,47 @@ static inline String piperLanguageFromLangCode() {
     return "ja";
 }
 
+static inline String piperCharacterFromCurrentSettings() {
+    String lang = LANG_CODE;
+    lang.trim();
+    lang.toLowerCase();
 
-// ===== TTS比較テスト用フラグ =====
+    String lang2 = "ja";
+    if (lang.startsWith("en")) {
+        lang2 = "en";
+    } else if (lang.startsWith("zh")) {
+        lang2 = "zh";
+    }
+
+    String ch = CHARACTER;
+    ch.trim();
+
+    if (ch.length() == 0) {
+        ch = "01";
+    }
+
+    if (ch.length() == 1) {
+        ch = "0" + ch;
+    }
+
+    String out = lang2 + "-" + ch;
+
+    if (out.length() < 5 || out.charAt(2) != '-') {
+        return "ja-01";
+    }
+
+    return out;
+}
+
+// ===== TTS endpoint選択 =====
 // true  : /tts_live.wav
+//         Android Termux + piper-plus通常版でも使用する推奨経路。
+//         サーバー側は piper --output-raw をWAV化して返す。
+//         PIPER_USE_DEV_STREAMING=0 の場合、Dev版 --streaming は使わない。
+//
 // false : /tts_stream.wav
+//         合成済みWAVファイルをFileResponseで返す経路。
+//         Piper生成完了までHTTPヘッダが返らず、ESP32側のヘッダ待ち5秒に引っかかりやすい。
  static bool g_use_live_tts = true;
 // static bool g_use_live_tts = false;
 
@@ -676,18 +713,28 @@ static void piperPrefetchTaskFunc(void* arg) {
 
     const String piperLang = piperLanguageFromLangCode();
 
+    const String piperCharacter = piperCharacterFromCurrentSettings();
+
     // pf.client.print(String("GET ") + "/tts.wav?text=" + urlEncodeUTF8(t) +
     //                  "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
     //                  "&language=" + piperLang +
     //                  " HTTP/1.1\r\n" +
     //                  "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
     //                  "Connection: close\r\n\r\n");
+    // pf.client.print(String("GET ") + piperTtsPath() + String("?text=") + urlEncodeUTF8(t) +
+    //                 "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
+    //                 "&language=" + piperLang +
+    //                 " HTTP/1.1\r\n" +
+    //                 "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
+    //                 "Connection: close\r\n\r\n");    
+
     pf.client.print(String("GET ") + piperTtsPath() + String("?text=") + urlEncodeUTF8(t) +
                     "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
                     "&language=" + piperLang +
+                    "&character=" + urlEncodeUTF8(piperCharacter) +
                     " HTTP/1.1\r\n" +
                     "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
-                    "Connection: close\r\n\r\n");    
+                    "Connection: close\r\n\r\n");
 
     HttpBodyState body;
     int httpCode = skipHttpHeader(pf.client, body);
@@ -855,12 +902,20 @@ static bool speak_piper_http(const String& text, bool allow_cancel) {
     M5.Speaker.setVolume(PiperPlus_voice_volume);
 
     const String piperLang = piperLanguageFromLangCode();
+
+    const String piperCharacter = piperCharacterFromCurrentSettings();
+
     const char* path = piperTtsPath();
 
+    // const String url = String("http://") + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) +
+    //                    String(path) + "?text=" + urlEncodeUTF8(t) +
+    //                    "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
+    //                    "&language=" + piperLang;
     const String url = String("http://") + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) +
-                       String(path) + "?text=" + urlEncodeUTF8(t) +
-                       "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
-                       "&language=" + piperLang;
+                    String(path) + "?text=" + urlEncodeUTF8(t) +
+                    "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
+                    "&language=" + piperLang +
+                    "&character=" + urlEncodeUTF8(piperCharacter);
 
     const uint32_t reqId = ++g_piper_req_seq;
     const uint32_t t0 = millis();
@@ -881,12 +936,19 @@ static bool speak_piper_http(const String& text, bool allow_cancel) {
     }
     const uint32_t tConnect = millis();
 
+    // client.print(String("GET ") + String(path) + "?text=" + urlEncodeUTF8(t) +
+    //              "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
+    //              "&language=" + piperLang +
+    //              " HTTP/1.1\r\n" +
+    //              "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
+    //              "Connection: close\r\n\r\n");
     client.print(String("GET ") + String(path) + "?text=" + urlEncodeUTF8(t) +
-                 "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
-                 "&language=" + piperLang +
-                 " HTTP/1.1\r\n" +
-                 "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
-                 "Connection: close\r\n\r\n");
+                "&length_scale=" + String(PIPER_TTS_LENGTH_SCALE, 2) +
+                "&language=" + piperLang +
+                "&character=" + urlEncodeUTF8(piperCharacter) +
+                " HTTP/1.1\r\n" +
+                "Host: " + PIPER_TTS_IP + ":" + String(PIPER_TTS_PORT) + "\r\n" +
+                "Connection: close\r\n\r\n");
 
     HttpBodyState body;
     int httpCode = skipHttpHeader(client, body);

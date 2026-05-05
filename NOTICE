@@ -5,3 +5,17 @@ Licensed under the Apache License, Version 2.0.
 
 This project uses third-party open-source libraries.
 See third_party_licenses/ for details.
+
+Optional external TTS support:
+
+StackChan Minimal may be configured to connect to external TTS servers, including piper-plus and a user-provided VOICEVOX-compatible adapter.
+
+This repository does not include VOICEVOX, VOICEVOX Engine, VOICEVOX Core, voice models, voice libraries, or VOICEVOX installers.
+
+When using generated audio from VOICEVOX voice libraries, users must follow the VOICEVOX software terms and each voice library's terms.
+
+Credit examples:
+VOICEVOX:ずんだもん
+VOICEVOX:四国めたん
+
+StackChan Minimal is not affiliated with or endorsed by VOICEVOX or the rights holders of the voice libraries.

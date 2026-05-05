@@ -1,0 +1,8 @@
+*.sh text eol=lf
+*.py text eol=lf
+*.md text
+*.html text
+*.cpp text
+*.h text
+*.ini text
+*.csv text

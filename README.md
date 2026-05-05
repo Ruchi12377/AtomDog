@@ -14,7 +14,9 @@ This project is intended for demonstration, learning, and Maker activities.
   - llama.cpp
   - LM Studio
   - Ollama
-- Text-to-speech via piper-plus
+- Text-to-speech via an external TTS server
+  - piper-plus
+  - Optional: VOICEVOX-compatible adapter
 - MAX30100 heart-rate / SpO2 reference value demo
 - Optional servo motion
 
@@ -27,13 +29,29 @@ This project is intended for demonstration, learning, and Maker activities.
 
 ## AI server tools
 
-This firmware does not include AI models or AI server binaries.
+This firmware does not include AI models, AI server binaries, TTS engines, voice models, or voice libraries.
 
 You need to run compatible local services separately:
 
 - whisper.cpp for speech-to-text
 - llama.cpp, LM Studio, or Ollama for local LLM chat
 - piper-plus for text-to-speech
+- Optional: VOICEVOX Engine + VOICEVOX-compatible adapter for text-to-speech
+
+## Optional: VOICEVOX TTS
+
+StackChan Minimal can be configured to connect to an external VOICEVOX-compatible TTS adapter.
+
+This repository does not include VOICEVOX, VOICEVOX Engine, VOICEVOX Core, voice models, voice libraries, or VOICEVOX installers.
+
+When using VOICEVOX audio, please install VOICEVOX separately from its official distribution source and follow the VOICEVOX software terms and each voice library's terms.
+
+Credit examples:
+
+- VOICEVOX:ずんだもん
+- VOICEVOX:四国めたん
+
+StackChan Minimal is not affiliated with or endorsed by VOICEVOX or the rights holders of the voice libraries.
 
 ## Sensors
 
@@ -60,6 +78,21 @@ The SpO2 value is an uncalibrated reference value based on optical sensor readin
 SpO2参考値は未校正の光学センサー値から算出しており、指の置き方、周囲光、センサーモジュールの個体差、動きによって大きく変動することがあります。
 
 現在の公開版には、ENV-Pro / BME688 環境センサー機能は含めていません。
+
+## 任意機能: VOICEVOX TTS
+
+StackChan Minimal は、外部TTSサーバーとして VOICEVOX 互換Adapterへ接続することができます。
+
+本リポジトリには、VOICEVOX、VOICEVOX Engine、VOICEVOX Core、音声モデル、音声ライブラリ、VOICEVOXインストーラーは含まれていません。
+
+VOICEVOX音声を利用する場合は、ユーザー自身が公式配布元からVOICEVOXを別途インストールし、VOICEVOXソフトウェア利用規約および各音声ライブラリの利用規約に従ってください。
+
+クレジット表記例:
+
+- VOICEVOX:ずんだもん
+- VOICEVOX:四国めたん
+
+StackChan Minimal は、VOICEVOXおよび各音声ライブラリの権利者による公式製品・公認製品ではありません。
 
 ## License
 
