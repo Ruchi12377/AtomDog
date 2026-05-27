@@ -54,31 +54,41 @@ from typing import Any, Iterator, Optional
 
 IS_WINDOWS = platform.system().lower().startswith("win")
 
-# ---- Piper-plus デフォルト値: 現在のWindows実績環境を優先しつつ、環境変数で上書き可能 ----
-# Windows例:
-#   set PIPER_EXE=C:\Users\UtaAoya\piper\bin\piper.exe
-#   set PIPER_MODEL=C:\Users\UtaAoya\AppData\Roaming\piper\models\tsukuyomi-chan-6lang-fp16.onnx
-#   set PIPER_CONFIG=C:\Users\UtaAoya\AppData\Roaming\piper\models\config.json
-#   set PIPER_CACHE_DIR=C:\Users\UtaAoya\piper\cache
+# ---- Piper-plus デフォルト値: tts_server.py のあるフォルダを基準にする ----
 #
-# Linux / Termux(proot)例:
-#   export PIPER_EXE=/root/piper/piperplus/piper/bin/piper
-#   export PIPER_MODEL=tsukuyomi
-#   export PIPER_CACHE_DIR=/root/piper/cache
+# 基本方針:
+#   tts_server.py が置かれているフォルダを BASE_DIR とし、
+#   その下にある bin / models-tsukuyomi-wavlm / cache を使います。
+#
+# Windows例:
+#   C:\App\piper-plus-bin
+#   ├─ tts_server.py
+#   ├─ bin\piper.exe
+#   ├─ models-tsukuyomi-wavlm\config.json
+#   ├─ models-tsukuyomi-wavlm\tsukuyomi-wavlm-300epoch.onnx
+#   └─ cache
+#
+# Linux / Android Termux例:
+#   ~/piper-plus-bin
+#   ├─ tts_server.py
+#   ├─ bin/piper
+#   ├─ models-tsukuyomi-wavlm/config.json
+#   ├─ models-tsukuyomi-wavlm/tsukuyomi-wavlm-300epoch.onnx
+#   └─ cache
+#
+# 必要な場合は、従来どおり以下の環境変数で上書きできます。
+#   PIPER_EXE / PIPER_MODEL / PIPER_CONFIG / PIPER_CACHE_DIR
 
-DEFAULT_WINDOWS_USER = os.environ.get("USERNAME", "UtaAoya")
-DEFAULT_WINDOWS_HOME = pathlib.Path(os.environ.get("USERPROFILE", rf"C:\Users\{DEFAULT_WINDOWS_USER}"))
+BASE_DIR = pathlib.Path(__file__).resolve().parent
 
 if IS_WINDOWS:
-    DEFAULT_PIPER_EXE = str(DEFAULT_WINDOWS_HOME / "piper" / "bin" / "piper.exe")
-    DEFAULT_PIPER_MODEL = str(DEFAULT_WINDOWS_HOME / "AppData" / "Roaming" / "piper" / "models" / "tsukuyomi-chan-6lang-fp16.onnx")
-    DEFAULT_PIPER_CONFIG = str(DEFAULT_WINDOWS_HOME / "AppData" / "Roaming" / "piper" / "models" / "config.json")
-    DEFAULT_CACHE_DIR = str(DEFAULT_WINDOWS_HOME / "piper" / "cache")
+    DEFAULT_PIPER_EXE = str(BASE_DIR / "bin" / "piper.exe")
 else:
-    DEFAULT_PIPER_EXE = "/root/piper/piperplus/piper/bin/piper"
-    DEFAULT_PIPER_MODEL = "tsukuyomi"
-    DEFAULT_PIPER_CONFIG = ""
-    DEFAULT_CACHE_DIR = "/root/piper/cache"
+    DEFAULT_PIPER_EXE = str(BASE_DIR / "bin" / "piper")
+
+DEFAULT_PIPER_MODEL = str(BASE_DIR / "models-tsukuyomi-wavlm" / "tsukuyomi-wavlm-300epoch.onnx")
+DEFAULT_PIPER_CONFIG = str(BASE_DIR / "models-tsukuyomi-wavlm" / "config.json")
+DEFAULT_CACHE_DIR = str(BASE_DIR / "cache")
 
 PIPER_EXE = os.environ.get("PIPER_EXE", DEFAULT_PIPER_EXE)
 PIPER_MODEL = os.environ.get("PIPER_MODEL", DEFAULT_PIPER_MODEL)
