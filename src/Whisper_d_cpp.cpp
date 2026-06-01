@@ -69,10 +69,12 @@ String Whisper::Transcribe(AudioWhisper* audio,
   // 既存接続があれば切断してから再接続（リトライ耐性）
   if (client.connected()) client.stop();
 
-  Serial.printf("[Whisper] connecting to %s:%u\n", server.c_str(), (unsigned)port_);
-  if (!client.connect(server.c_str(), port_)) {
+  Serial.printf("[Whisper] connecting to %s:%u%s\n",
+                server.c_str(), (unsigned)port_, path_.c_str());
+  if (!client.connect(server.c_str(), port_, 8000)) {
     Serial.println("[Whisper] Connection failed!");
-    return "エラーです。Whisperサーバーに接続できませんでした";
+    return String("エラーです。Whisperサーバー(") + server + ":" + String(port_) +
+           ")に接続できません。IPとポートを確認してください";
   }
   Serial.println("[Whisper] Connection success!");
 

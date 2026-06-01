@@ -49,7 +49,7 @@ class Face {
        Drawable *eyeblowR, BoundingRect *eyeblowRPos, Drawable *eyeblowL,
        BoundingRect *eyeblowLPos,
        BoundingRect *boundingRect, M5Canvas *spr, M5Canvas *tmpSpr);
-  ~Face();
+  virtual ~Face();
   Face(const Face &other) = default;
   Face &operator=(const Face &other) = default;
 
@@ -68,7 +68,7 @@ class Face {
   void setLeftEyeblow();
   void setRightEyeblow();
 
-  void draw(DrawContext *ctx);
+  virtual void draw(DrawContext *ctx);
 };
 }  // namespace m5avatar
 

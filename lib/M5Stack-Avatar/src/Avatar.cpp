@@ -176,7 +176,7 @@ void Avatar::start(int colorDepth) {
   // TODO(meganetaaan): keep handle of these tasks
   xTaskCreateUniversal(drawLoop,     /* Function to implement the task */
                           "drawLoop",   /* Name of the task */
-                          2048,         /* Stack size in words */
+                          4096,         /* Stack size in words */
                           ctx,          /* Task input parameter */
                           1,            /* Priority of the task */
                           &drawTaskHandle,        /* Task handle. */

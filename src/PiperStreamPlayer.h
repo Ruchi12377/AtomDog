@@ -620,7 +620,10 @@ static void streamPcmToSpeaker(WiFiClient& client,
                 continue;
             }
 
-            out[outCount++] = mono;
+            int32_t boosted = (int32_t)((float)mono * PIPER_TTS_GAIN);
+            if (boosted > 32767) boosted = 32767;
+            if (boosted < -32768) boosted = -32768;
+            out[outCount++] = (int16_t)boosted;
         }
 
         if (outCount == 0) continue;
