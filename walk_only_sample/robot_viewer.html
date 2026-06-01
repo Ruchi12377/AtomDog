@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><title>AtomS3R Robot Viewer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.158.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.158.0/examples/jsm/"}}
+</script>
+<style>
+:root{
+  --mui-bg:#f3f4f6;
+  --mui-paper:#ffffff;
+  --mui-paper-2:#f9fafb;
+  --mui-primary:#2563eb;
+  --mui-primary-dark:#1d4ed8;
+  --mui-primary-bg:rgba(37,99,235,.08);
+  --mui-text:#1f2937;
+  --mui-text2:#4b5563;
+  --mui-text3:#9ca3af;
+  --mui-divider:rgba(0, 0, 0, 0.08);
+  --mui-error:#dc2626;
+  --mui-radius:6px;
+  --mui-shadow:0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--mui-bg);color:var(--mui-text);
+  font-family:Roboto,system-ui,sans-serif;font-size:14px;letter-spacing:.01em}
+body{display:flex}
+
+#panel{width:280px;flex-shrink:0;background:var(--mui-paper);border-right:1px solid var(--mui-divider);
+  display:flex;flex-direction:column;box-shadow:var(--mui-shadow)}
+.appbar{padding:12px 16px;background:var(--mui-paper-2);border-bottom:1px solid var(--mui-divider)}
+.appbar h1{font-size:1rem;font-weight:500;color:var(--mui-text)}
+#pi{flex:1;overflow-y:auto;padding:16px}
+.mui-sub{font-size:.75rem;font-weight:500;color:var(--mui-text2);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px}
+.mui-sub:first-child{margin-top:0}
+.mui-field{margin-bottom:12px}
+.mui-label{display:block;font-size:.75rem;color:var(--mui-text2);margin-bottom:4px}
+.mui-input{width:100%;background:transparent;border:1px solid var(--mui-divider);border-radius:var(--mui-radius);
+  color:var(--mui-text);padding:10px 12px;font-size:.875rem;font-family:inherit;outline:none;transition:border .15s}
+.mui-input:hover{border-color:rgba(0,0,0,.2)}
+.mui-input:focus{border-color:var(--mui-primary);border-width:2px;padding:9px 11px}
+.mui-status{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:.8125rem;color:var(--mui-text2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mui-text3);flex-shrink:0}
+.dot.ok{background:#66bb6a}
+.dot.walk{background:var(--mui-primary)}
+
+.mui-btn{display:inline-flex;align-items:center;justify-content:center;width:100%;
+  padding:8px 16px;border-radius:var(--mui-radius);font-size:.875rem;font-weight:500;
+  font-family:inherit;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;
+  border:none;transition:background .15s,box-shadow .15s;margin-bottom:8px}
+.mui-btn-contained{background:var(--mui-primary-dark);color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.mui-btn-contained:hover{background:#1565c0;box-shadow:0 4px 8px rgba(0,0,0,.4)}
+.mui-btn-outlined{background:transparent;color:var(--mui-primary);border:1px solid rgba(144,202,249,.5)}
+.mui-btn-outlined:hover{background:var(--mui-primary-bg);border-color:var(--mui-primary)}
+.mui-btn-text{background:transparent;color:var(--mui-primary);text-transform:none;letter-spacing:0}
+.mui-btn-text:hover{background:var(--mui-primary-bg)}
+.mui-btn.on{background:var(--mui-primary-dark);color:#fff}
+.mui-btn.error{color:var(--mui-error);border-color:rgba(244,67,54,.5)}
+.mui-btn.error:hover{background:rgba(244,67,54,.08)}
+.mui-btn-row{display:flex;gap:8px}
+.mui-btn-row .mui-btn{flex:1;margin-bottom:0}
+
+.mui-paper{background:var(--mui-paper-2);border-radius:var(--mui-radius);padding:8px;margin-bottom:8px;
+  border:1px solid var(--mui-divider)}
+.angle-row{display:grid;grid-template-columns:1fr 52px 32px 32px;gap:4px;align-items:center;padding:6px 4px;
+  border-radius:var(--mui-radius)}
+.angle-row:hover{background:rgba(0,0,0,.03)}
+.angle-row .lbl{font-size:.75rem;color:var(--mui-text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.angle-row input{width:52px;padding:6px;text-align:center;margin:0;font-size:.875rem}
+.angle-row .icon-btn{width:32px;height:32px;min-width:32px;padding:0;margin:0;border-radius:50%;
+  font-size:1.1rem;background:transparent;color:var(--mui-text2);border:none;cursor:pointer}
+.angle-row .icon-btn:hover{background:rgba(0,0,0,.04)}
+
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#cw{flex:1;position:relative;background:#f3f4f6}
+canvas{display:block}
+#fps{position:absolute;top:8px;right:12px;font-size:.75rem;color:var(--mui-text3);pointer-events:none}
+#tip{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--mui-paper);
+  color:var(--mui-text);font-size:.875rem;padding:8px 16px;border-radius:var(--mui-radius);
+  box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:none;display:none}
+
+#tl{height:168px;flex-shrink:0;background:var(--mui-paper);border-top:1px solid var(--mui-divider);
+  display:flex;flex-direction:column;box-shadow:0 -2px 8px rgba(0,0,0,.25)}
+#tlbar{min-height:48px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 12px;
+  background:var(--mui-paper-2);border-bottom:1px solid var(--mui-divider);flex-wrap:wrap}
+#tl-name{width:100px;flex-shrink:0;padding:8px 10px;font-size:.875rem}
+.tb{flex-shrink:0;width:auto;margin:0;padding:6px 12px;font-size:.8125rem;text-transform:uppercase;
+  letter-spacing:.04em;border-radius:var(--mui-radius);background:transparent;color:var(--mui-text2);
+  border:1px solid transparent}
+.tb:hover{background:rgba(0,0,0,.04)}
+.tb.on{background:var(--mui-primary-bg);color:var(--mui-primary);border-color:rgba(144,202,249,.3)}
+.tb.error{color:var(--mui-error)}
+.tb.error:hover{background:rgba(244,67,54,.08)}
+#tl-info{font-size:.8125rem;color:var(--mui-text2);margin-left:auto;white-space:nowrap}
+
+#tlscroll{flex:1;overflow-x:auto;padding:12px}
+#tlframes{display:flex;gap:6px;align-items:stretch;height:100%}
+
+.fb{flex-shrink:0;position:relative;min-width:36px;min-height:52px;background:var(--mui-paper-2);
+  border:1px solid var(--mui-divider);border-radius:var(--mui-radius);padding:8px 10px;cursor:pointer;
+  user-select:none;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;
+  transition:background .15s,border-color .15s,box-shadow .15s}
+.fb:hover{border-color:rgba(0,0,0,.12);box-shadow:var(--mui-shadow)}
+.fb.active{background:var(--mui-primary-bg);border-color:var(--mui-primary);box-shadow:0 0 0 1px var(--mui-primary)}
+.fb.active .fb-n,.fb.active .fb-ms{color:var(--mui-primary)}
+.fb.resizing{border-color:var(--mui-primary);box-shadow:0 0 0 2px var(--mui-primary)}
+.fb-n{font-size:.8125rem;font-weight:500;color:var(--mui-text2)}
+.fb-ms{font-size:.75rem;color:var(--mui-text3);margin-top:2px}
+.fb-rh{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;z-index:2}
+.fb-rh-l{left:0;border-radius:var(--mui-radius) 0 0 var(--mui-radius)}
+.fb-rh-r{right:0;border-radius:0 var(--mui-radius) var(--mui-radius) 0}
+.fb-rh:hover{background:rgba(37,99,235,.1)}
+</style>
+</head>
+<body>
+<div id="panel">
+  <div class="appbar"><h1>Robot Viewer</h1></div>
+  <div id="pi">
+    <div class="mui-sub">接続</div>
+    <div class="mui-field">
+      <label class="mui-label">IP アドレス</label>
+      <input type="text" id="ip" class="mui-input" value="192.168.1.18">
+    </div>
+    <div class="mui-btn-row">
+      <button id="btn-conn" class="mui-btn mui-btn-contained">接続</button>
+    </div>
+    <div class="mui-status"><span class="dot" id="dot"></span><span id="stxt">未接続</span></div>
+    <button id="btn-sync" class="mui-btn mui-btn-outlined on">Live Sync</button>
+
+    <div class="mui-sub">パルス幅 (μs)</div>
+    <div class="mui-paper">
+      <div class="angle-row">
+        <span class="lbl">Min (0°)</span>
+        <input type="number" id="minUs" class="mui-input" min="400" max="1500" step="10" value="700">
+        <button type="button" class="mui-btn icon-btn" id="min-m">−</button>
+        <button type="button" class="mui-btn icon-btn" id="min-p">+</button>
+      </div>
+      <div class="angle-row">
+        <span class="lbl">Max (180°)</span>
+        <input type="number" id="maxUs" class="mui-input" min="1500" max="2600" step="10" value="2300">
+        <button type="button" class="mui-btn icon-btn" id="max-m">−</button>
+        <button type="button" class="mui-btn icon-btn" id="max-p">+</button>
+      </div>
+    </div>
+    <button id="btn-range" class="mui-btn mui-btn-contained">適用</button>
+
+    <div class="mui-sub">関節角度</div>
+    <div class="mui-paper angles" id="angles"></div>
+    <button id="btn-neutral" class="mui-btn mui-btn-text">デフォルト姿勢</button>
+    <button id="btn-h" class="mui-btn mui-btn-text">ハンドル表示</button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="cw">
+    <div id="fps">-- fps</div>
+    <div id="tip"></div>
+  </div>
+  <div id="tl">
+    <div id="tlbar">
+      <input id="tl-name" class="mui-input" value="new_motion" placeholder="名前">
+      <button class="tb" id="tl-add" title="フレーム追加">+</button>
+      <button class="tb" id="tl-dup" title="複製">複製</button>
+      <button class="tb error" id="tl-del" title="削除">削除</button>
+      <button class="tb" id="tl-prev">◀</button>
+      <button class="tb" id="tl-next">▶</button>
+      <button class="tb" id="tl-play">再生</button>
+      <button class="tb" id="tl-loop">ループ</button>
+      <button class="tb error" id="tl-stop">停止</button>
+      <button class="tb mui-btn-contained" id="tl-up" style="background:var(--mui-primary-dark);color:#fff">保存</button>
+      <span id="tl-info">1/1</span>
+    </div>
+    <div id="tlscroll"><div id="tlframes"></div></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Renderer ────────────────────────────────────────────────────────────────
+const cw = document.getElementById('cw');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+cw.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf3f4f6);
+scene.fog = new THREE.FogExp2(0xf3f4f6, 0.016);
+
+const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 120);
+camera.position.set(12, 9, 16);
+
+const ctrl = new OrbitControls(camera, renderer.domElement);
+ctrl.target.set(0, -2, 0);
+ctrl.enableDamping = true;
+ctrl.dampingFactor = 0.08;
+
+const onResize = () => {
+  const w = cw.clientWidth, h = cw.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+};
+new ResizeObserver(onResize).observe(cw);
+onResize();
+
+// ── Lights ───────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(8, 14, 10);
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0x3355ff, 0.25);
+rim.position.set(-6, 3, -8);
+scene.add(rim);
+
+// floor grid
+const grid = new THREE.GridHelper(50, 50, 0xbbbbbb, 0xe5e7eb);
+grid.position.y = -8.2;
+scene.add(grid);
+
+// ── Simple box factory ───────────────────────────────────────────────────────
+const mkBox = (w, h, d, color) => {
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshLambertMaterial({ color })
+  );
+  return m;
+};
+
+// ── Robot model (minimal cubes) ──────────────────────────────────────────────
+const robot = new THREE.Group();
+scene.add(robot);
+
+// Body
+const body = mkBox(7, 1.2, 4.6, 0x252535);
+robot.add(body);
+
+const DEG = Math.PI / 180;
+const UH = 3.0; // upper leg height
+const LH = 2.6; // lower leg height
+
+// CH assignments and sign:
+//   hipSign  +1 → angle>90 = rotation.x positive direction
+//   kneeSign +1 → angle>90 = rotation.x positive direction
+// applyAngles uses: pivot.rotation.x = -sign * (angle - 90) * DEG
+// 画面上の脚位置 ↔ 実機CH（カメラ視点で左右が入れ替わる）
+// 画面左前→ロボ右前(CH0,1)  画面右前→ロボ右後(CH2,3)
+// 画面右後→ロボ左後(CH6,7)  画面左後→ロボ左前(CH4,5)
+const LEG_DEFS = [
+  { name:'scrLF', x:-3.2, z: 1.9, chHip:1, chKnee:0, hs: 1, ks: 1 }, // → RF
+  { name:'scrRF', x: 3.2, z: 1.9, chHip:3, chKnee:2, hs:-1, ks:-1 }, // → RR
+  { name:'scrRR', x: 3.2, z:-1.9, chHip:7, chKnee:6, hs:-1, ks:-1 }, // → LR
+  { name:'scrLR', x:-3.2, z:-1.9, chHip:5, chKnee:4, hs: 1, ks: 1 }, // → LF
+];
+
+const legRefs = {};
+for (const def of LEG_DEFS) {
+  // Attachment point at body corner
+  const attach = new THREE.Group();
+  attach.position.set(def.x, -0.6, def.z);
+  robot.add(attach);
+
+  // Hip pivot
+  const hipPivot = new THREE.Group();
+  attach.add(hipPivot);
+
+  // Upper leg (hangs from hipPivot)
+  const upper = mkBox(0.8, UH, 0.8, 0x1e3255);
+  upper.position.y = -UH / 2;
+  hipPivot.add(upper);
+
+  // Knee pivot (at bottom of upper leg)
+  const kneePivot = new THREE.Group();
+  kneePivot.position.y = -UH;
+  hipPivot.add(kneePivot);
+
+  // Lower leg (hangs from kneePivot)
+  const lower = mkBox(0.65, LH, 0.65, 0x28405e);
+  lower.position.y = -LH / 2;
+  kneePivot.add(lower);
+
+  // Foot
+  const foot = mkBox(1.0, 0.3, 1.4, 0x3a5070);
+  foot.position.set(0, -LH - 0.15, 0.35);
+  kneePivot.add(foot);
+
+  legRefs[def.name] = { hipPivot, kneePivot, def };
+}
+
+const DEFAULT_STANCE = [68, 112, 112, 68, 68, 112, 112, 68];
+let displayAngles = [...DEFAULT_STANCE];
+
+function easeInOutCubic(t) {
+  t = Math.max(0, Math.min(1, t));
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function lerpAngles(from, to, t) {
+  return from.map((v, i) => Math.round(v + (to[i] - v) * t));
+}
+
+function applyAngles(a) {
+  displayAngles = a.map(v => Math.round(Math.max(0, Math.min(180, v))));
+  for (const { hipPivot, kneePivot, def } of Object.values(legRefs)) {
+    hipPivot.rotation.x  = -def.hs * (displayAngles[def.chHip]  - 90) * DEG;
+    kneePivot.rotation.x = -def.ks * (displayAngles[def.chKnee] - 90) * DEG;
+  }
+}
+applyAngles(DEFAULT_STANCE);
+
+// ── Rotation handles ──────────────────────────────────────────────────────────
+// One torus ring per joint (8 total).
+// Ring lives in YZ plane (rotation.y = PI/2) so its normal points along X → shows X rotation.
+// An "arm" cylinder child of the ring shows current direction.
+// Both rotate with the parent pivot automatically. ✓
+
+const handleMeshes = []; // for raycasting only
+let handlesOn = true;
+
+function makeHandle(pivot, ch, isHip) {
+  const color = isHip ? 0xff5500 : 0x0088ff;
+  const r     = isHip ? 1.3     : 1.0;
+
+  const baseOpacity = isHip ? 0.58 : 0.52;
+  const mat  = new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity: baseOpacity, side: THREE.DoubleSide, depthWrite: false
+  });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.18, 10, 64), mat);
+  // Orient ring so it lies in the YZ plane; its normal is +X.
+  // When parent pivot.rotation.x changes, the ring spins around X → correct visual.
+  ring.rotation.y = Math.PI / 2;
+  ring.userData = { ch, mat, color, baseOpacity, active: false };
+
+  // Arm: extends in -Y direction from ring center to show current joint direction.
+  // This rotates with the ring (and pivot), making it a live angle indicator.
+  const arm = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, r * 0.9, 6),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, depthWrite: false })
+  );
+  arm.position.y = -r * 0.45;
+  ring.add(arm);
+
+  // Tip dot
+  const tip = new THREE.Mesh(
+    new THREE.SphereGeometry(0.16, 8, 8),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false })
+  );
+  tip.position.y = -r * 0.9;
+  ring.add(tip);
+
+  pivot.add(ring);        // single parent: pivot ✓
+  handleMeshes.push(ring);
+}
+
+for (const def of LEG_DEFS) {
+  const { hipPivot, kneePivot } = legRefs[def.name];
+  makeHandle(hipPivot,  def.chHip,  true);
+  makeHandle(kneePivot, def.chKnee, false);
+}
+
+function setHandlesVisible(on) {
+  handlesOn = on;
+  for (const m of handleMeshes) {
+    m.visible = on;
+    for (const c of m.children) c.visible = on;
+  }
+  document.getElementById('btn-h').textContent = on ? 'ハンドル ON' : 'ハンドル表示';
+  document.getElementById('btn-h').classList.toggle('on', on);
+}
+document.getElementById('btn-h').addEventListener('click', () => setHandlesVisible(!handlesOn));
+setHandlesVisible(true);
+
+// ── Angle inputs ───────────────────────────────────────────────────────────────
+const CH = ['RF knee','RF hip','RR knee','RR hip','LF knee','LF hip','LR knee','LR hip'];
+const aInputs = [];
+
+function setAngleUi(ch, v, force = false) {
+  if (!aInputs[ch]) return;
+  if (!force && document.activeElement === aInputs[ch]) return;
+  aInputs[ch].value = String(Math.round(v));
+}
+
+function setDisplay(a, force = false) {
+  for (let i = 0; i < 8; i++) setAngleUi(i, a[i] ?? 90, force);
+}
+
+function applyAnglesToFrame(angles) {
+  const f = cf();
+  if (!f) return;
+  f.angles = angles.map(v => Math.round(Math.max(0, Math.min(180, v))));
+  applyAngles(f.angles);
+  setDisplay(f.angles, true);
+  renderTL();
+  syncPushAngles(f.angles);
+}
+
+function commitAngleInput(ch) {
+  const f = cf();
+  if (!f) return;
+  const v = Math.round(Math.max(0, Math.min(180, +aInputs[ch].value || 90)));
+  f.angles[ch] = v;
+  applyAnglesToFrame(f.angles);
+}
+
+function nudgeAngle(ch, delta) {
+  const f = cf();
+  if (!f) return;
+  f.angles[ch] = Math.round(Math.max(0, Math.min(180, f.angles[ch] + delta)));
+  applyAnglesToFrame(f.angles);
+}
+
+CH.forEach((n, i) => {
+  const d = document.createElement('div');
+  d.className = 'angle-row';
+  d.innerHTML = `<span class="lbl"><b>CH${i}</b> ${n}</span>`;
+  const inp = document.createElement('input');
+  inp.type = 'number';
+  inp.className = 'mui-input';
+  inp.min = 0; inp.max = 180; inp.step = 1;
+  inp.value = 90;
+  inp.id = 'av' + i;
+  inp.addEventListener('change', () => commitAngleInput(i));
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitAngleInput(i); inp.blur(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); nudgeAngle(i, 1); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); nudgeAngle(i, -1); }
+  });
+  const btnM = document.createElement('button');
+  btnM.type = 'button';
+  btnM.className = 'mui-btn icon-btn';
+  btnM.textContent = '−';
+  btnM.addEventListener('click', () => nudgeAngle(i, -1));
+  const btnP = document.createElement('button');
+  btnP.type = 'button';
+  btnP.className = 'mui-btn icon-btn';
+  btnP.textContent = '+';
+  btnP.addEventListener('click', () => nudgeAngle(i, 1));
+  d.appendChild(inp);
+  d.appendChild(btnM);
+  d.appendChild(btnP);
+  document.getElementById('angles').appendChild(d);
+  aInputs.push(inp);
+});
+
+document.getElementById('btn-neutral').addEventListener('click', () => {
+  if (cf()) applyAnglesToFrame([...DEFAULT_STANCE]);
+});
+
+// ── Edit state ─────────────────────────────────────────────────────────────────
+let em = {               // editMotion
+  name: 'new_motion',
+  frames: [{ ms: 150, angles: [...DEFAULT_STANCE] }]
+};
+
+const motionPayload = () =>
+  JSON.stringify({ name: em.name, loopStartFrame: 0, frames: em.frames });
+let ci = 0;             // currentIndex
+let lPlay = false, lLoop = false, lTid = null, playRaf = 0, playSeg = null;
+
+const cf = () => em.frames[ci];
+
+function applyFrame(idx) {
+  ci = Math.max(0, Math.min(idx, em.frames.length - 1));
+  const f = cf();
+  if (f) {
+    applyAngles(f.angles);
+    setDisplay(f.angles);
+    syncPushAngles(f.angles);
+  }
+  renderTL();
+}
+
+// ── Timeline (width ∝ ms, edge resize) ───────────────────────────────────────
+const PX_PER_MS = 0.7;
+const MS_MIN = 16;
+const MS_MAX = 8000;
+
+let resizeDrag = null;
+
+function framePx(ms) {
+  return Math.max(28, Math.round(ms * PX_PER_MS));
+}
+
+function clampMs(ms) {
+  return Math.round(Math.max(MS_MIN, Math.min(MS_MAX, ms)));
+}
+
+function updateTlInfo(extra = '') {
+  const f = cf();
+  document.getElementById('tl-info').textContent =
+    `${ci + 1}/${em.frames.length}  ${f?.ms || 75}ms` + (extra ? `  ${extra}` : '');
+}
+
+function setFrameElWidth(el, ms) {
+  el.style.width = framePx(ms) + 'px';
+  const msEl = el.querySelector('.fb-ms');
+  if (msEl) msEl.textContent = ms + 'ms';
+}
+
+function renderTL() {
+  const cont = document.getElementById('tlframes');
+  cont.innerHTML = em.frames.map((f, i) => {
+    const ac = i === ci ? ' active' : '';
+    const w = framePx(f.ms);
+    return `<div class="fb${ac}" data-i="${i}" style="width:${w}px">` +
+      `<div class="fb-rh fb-rh-l" data-i="${i}" data-side="l"></div>` +
+      `<div class="fb-rh fb-rh-r" data-i="${i}" data-side="r"></div>` +
+      `<div class="fb-n">${i + 1}</div>` +
+      `<div class="fb-ms">${f.ms} ms</div></div>`;
+  }).join('');
+
+  cont.querySelectorAll('.fb').forEach(el => {
+    const idx = +el.dataset.i;
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('fb-rh')) return;
+      applyFrame(idx);
+    });
+  });
+
+  cont.querySelectorAll('.fb-rh').forEach(el => {
+    el.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const idx = +el.dataset.i;
+      const side = el.dataset.side;
+      resizeDrag = { idx, side, startX: e.clientX, startMs: em.frames[idx].ms };
+      el.closest('.fb')?.classList.add('resizing');
+      document.body.style.cursor = 'ew-resize';
+      applyFrame(idx);
+    });
+  });
+
+  const ae = cont.querySelector('.fb.active');
+  if (ae) ae.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+
+  updateTlInfo();
+  document.getElementById('tl-name').value = em.name;
+}
+
+window.addEventListener('mousemove', e => {
+  if (!resizeDrag) return;
+  const dx = e.clientX - resizeDrag.startX;
+  const dMs = Math.round(dx / PX_PER_MS);
+  const delta = resizeDrag.side === 'r' ? dMs : -dMs;
+  const newMs = clampMs(resizeDrag.startMs + delta);
+  em.frames[resizeDrag.idx].ms = newMs;
+  const el = document.querySelector(`.fb[data-i="${resizeDrag.idx}"]`);
+  if (el) setFrameElWidth(el, newMs);
+  updateTlInfo('resize');
+});
+
+window.addEventListener('mouseup', () => {
+  if (!resizeDrag) return;
+  document.querySelectorAll('.fb.resizing').forEach(el => el.classList.remove('resizing'));
+  document.body.style.cursor = '';
+  resizeDrag = null;
+  renderTL();
+});
+
+// ── Edit operations ────────────────────────────────────────────────────────────
+const addFrame = () => {
+  const f = cf();
+  em.frames.splice(ci+1, 0, { ms: f?.ms||150, angles: [...(f?.angles||DEFAULT_STANCE)] });
+  applyFrame(ci+1);
+};
+const dupFrame = () => { const f=cf(); em.frames.splice(ci+1,0,{ms:f.ms,angles:[...f.angles]}); applyFrame(ci+1); };
+const delFrame = () => {
+  if (em.frames.length<=1) return;
+  em.frames.splice(ci,1);
+  applyFrame(Math.min(ci, em.frames.length-1));
+};
+
+// ── Local playback (+ device mirror, eased segments) ───────────────────────────
+function stopLocal() {
+  lPlay = false;
+  clearTimeout(lTid);
+  if (playRaf) cancelAnimationFrame(playRaf);
+  playRaf = 0;
+  playSeg = null;
+  document.getElementById('tl-loop').classList.remove('on');
+  document.getElementById('tl-play').classList.remove('on');
+  stopDevicePlayback();
+}
+
+function runPlaySegment() {
+  if (!lPlay || !em.frames.length) { stopLocal(); return; }
+  const n = em.frames.length;
+  const nextIdx = (ci + 1) % n;
+  if (!lLoop && ci >= n - 1) {
+    applyAngles(em.frames[n - 1].angles);
+    setDisplay(em.frames[n - 1].angles, true);
+    renderTL();
+    stopLocal();
+    return;
+  }
+  const from = [...displayAngles];
+  const to = [...em.frames[nextIdx].angles];
+  const dur = Math.max(40, em.frames[ci].ms || 150);
+  playSeg = { from, to, dur, start: performance.now(), nextIdx };
+  if (playRaf) cancelAnimationFrame(playRaf);
+  playRaf = requestAnimationFrame(tickPlayAnim);
+}
+
+function tickPlayAnim() {
+  if (!lPlay || !playSeg) return;
+  const t = Math.min(1, (performance.now() - playSeg.start) / playSeg.dur);
+  const a = lerpAngles(playSeg.from, playSeg.to, easeInOutCubic(t));
+  applyAngles(a);
+  setDisplay(a, true);
+  renderTL();
+  if (t < 1) {
+    playRaf = requestAnimationFrame(tickPlayAnim);
+    return;
+  }
+  ci = playSeg.nextIdx;
+  if (deviceConnected && !lLoop) pushAnglesToDevice(playSeg.to);
+  playSeg = null;
+  runPlaySegment();
+}
+
+async function ensureMotionOnDevice() {
+  if (!deviceConnected) return;
+  const name = em.name || 'motion';
+  await fetch(`http://${ip}/upload?name=${encodeURIComponent(name)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: motionPayload(),
+    signal: AbortSignal.timeout(15000),
+  });
+}
+
+async function startDevicePlayback(loop) {
+  if (!deviceConnected) return;
+  const name = encodeURIComponent(em.name || 'motion');
+  try {
+    await ensureMotionOnDevice();
+    if (loop) await apiFetch(`/loop/start?name=${name}`);
+  } catch (_) {}
+}
+
+async function stopDevicePlayback() {
+  if (!deviceConnected) return;
+  try { await apiFetch('/loop/stop'); } catch (_) {}
+}
+
+async function playLocal(loop) {
+  stopLocal();
+  lLoop = loop;
+  lPlay = true;
+  ci = 0;
+  if (em.frames[0]) {
+    applyAngles(em.frames[0].angles);
+    setDisplay(em.frames[0].angles, true);
+    renderTL();
+  }
+  document.getElementById(loop ? 'tl-loop' : 'tl-play').classList.add('on');
+  if (deviceConnected) await startDevicePlayback(loop);
+  runPlaySegment();
+}
+
+// Timeline button wiring
+document.getElementById('tl-add').onclick  = addFrame;
+document.getElementById('tl-dup').onclick  = dupFrame;
+document.getElementById('tl-del').onclick  = delFrame;
+document.getElementById('tl-prev').onclick = () => applyFrame(ci-1);
+document.getElementById('tl-next').onclick = () => applyFrame(ci+1);
+document.getElementById('tl-play').onclick = () => { playLocal(false); };
+document.getElementById('tl-loop').onclick = () => { lPlay && lLoop ? stopLocal() : playLocal(true); };
+document.getElementById('tl-stop').onclick = () => { stopLocal(); applyFrame(0); };
+document.getElementById('tl-name').addEventListener('input', e => { em.name = e.target.value||'motion'; });
+
+document.getElementById('tl-up').onclick = async () => {
+  try {
+    const r = await fetch(`http://${ip}/upload?name=${encodeURIComponent(em.name)}`,
+      { method:'POST', headers:{'Content-Type':'application/json'}, body: motionPayload(), signal:AbortSignal.timeout(6000) });
+    const j = await r.json();
+    document.getElementById('stxt').textContent = j.ok ? `Uploaded (${j.frames}f)` : `Error: ${j.error}`;
+    document.getElementById('dot').className = j.ok ? 'dot ok' : 'dot';
+  } catch(e) { document.getElementById('stxt').textContent = 'Upload failed'; }
+};
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName==='INPUT') return;
+  if (e.key==='ArrowRight') { e.preventDefault(); applyFrame(ci+1); }
+  if (e.key==='ArrowLeft')  { e.preventDefault(); applyFrame(ci-1); }
+  if (e.key===' ') { e.preventDefault(); lPlay ? stopLocal() : playLocal(false); }
+  if (e.key==='d'||e.key==='D') dupFrame();
+  if (e.key==='a'||e.key==='A') addFrame();
+  if (e.key==='Delete'||e.key==='Backspace') { if (!e.target.isContentEditable) delFrame(); }
+});
+
+// ── Handle drag ────────────────────────────────────────────────────────────────
+const rc  = new THREE.Raycaster();
+const mp  = new THREE.Vector2();
+let drag  = null;
+let hovH  = null;
+let activeH = null;
+const tip = document.getElementById('tip');
+const scratchV = new THREE.Vector3();
+const scratchP = new THREE.Vector3();
+
+const setMp = e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mp.x =  ((e.clientX-r.left)/r.width)  * 2 - 1;
+  mp.y = -((e.clientY-r.top) /r.height) * 2 + 1;
+};
+
+function clampAngle(v) {
+  return Math.round(Math.max(0, Math.min(180, v)));
+}
+
+function shortestRad(a) {
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function screenCenterFor(mesh) {
+  const r = renderer.domElement.getBoundingClientRect();
+  mesh.getWorldPosition(scratchV);
+  scratchP.copy(scratchV).project(camera);
+  return {
+    x: r.left + (scratchP.x + 1) * r.width * 0.5,
+    y: r.top + (-scratchP.y + 1) * r.height * 0.5
+  };
+}
+
+function pointerAngle(e, center) {
+  return Math.atan2(e.clientY - center.y, e.clientX - center.x);
+}
+
+function setHandleVisual(mesh, state) {
+  if (!mesh) return;
+  const mat = mesh.userData.mat;
+  if (state === 'active') {
+    mat.opacity = 1;
+    mat.color.set(0xffffff);
+  } else if (state === 'hover') {
+    mat.opacity = 0.92;
+    mat.color.set(mesh.userData.color);
+  } else {
+    mat.opacity = mesh.userData.baseOpacity;
+    mat.color.set(mesh.userData.color);
+  }
+}
+
+function setActiveHandle(mesh) {
+  if (activeH && activeH !== mesh) setHandleVisual(activeH, activeH === hovH ? 'hover' : 'idle');
+  activeH = mesh;
+  if (activeH) setHandleVisual(activeH, 'active');
+}
+
+function commitHandleAngle(ch, angle) {
+  const f = cf();
+  if (!f) return;
+  f.angles[ch] = clampAngle(angle);
+  applyAngles(f.angles);
+  setAngleUi(ch, f.angles[ch], true);
+  renderTL();
+  syncPushAngles(f.angles);
+}
+
+function hitHandle(e) {
+  setMp(e);
+  rc.setFromCamera(mp, camera);
+  const hits = rc.intersectObjects(handleMeshes, false);
+  return hits.length ? hits[0].object : null;
+}
+
+// Capture phase so we intercept before OrbitControls
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (e.button!==0 || !handlesOn) return;
+  const mesh = hitHandle(e);
+  if (!mesh) return;
+  e.stopPropagation();
+  e.preventDefault();
+  syncEditing = true;
+  const center = screenCenterFor(mesh);
+  drag = {
+    x0: e.clientX,
+    y0: e.clientY,
+    t0: pointerAngle(e, center),
+    center,
+    a0: cf()?.angles[mesh.userData.ch]??90,
+    mesh,
+    ch: mesh.userData.ch
+  };
+  setActiveHandle(mesh);
+  ctrl.enabled = false;
+  renderer.domElement.setPointerCapture?.(e.pointerId);
+  renderer.domElement.style.cursor = 'grabbing';
+}, { capture: true });
+
+window.addEventListener('pointermove', e => {
+  if (drag) {
+    const thetaDelta = shortestRad(pointerAngle(e, drag.center) - drag.t0) * THREE.MathUtils.RAD2DEG;
+    const linearDelta = ((e.clientX - drag.x0) - (e.clientY - drag.y0)) * 0.35;
+    const useCircular = Math.hypot(e.clientX - drag.center.x, e.clientY - drag.center.y) > 28;
+    const sensitivity = e.shiftKey ? 0.25 : (e.altKey ? 2.0 : 1.0);
+    const a = clampAngle(drag.a0 + (useCircular ? thetaDelta : linearDelta) * sensitivity);
+    commitHandleAngle(drag.ch, a);
+    tip.style.display = 'block';
+    tip.textContent = `CH${drag.ch} ${CH[drag.ch]}: ${a}°  Shift=微調整 / ダブルクリック=90°`;
+    return;
+  }
+  tip.style.display = 'none';
+  if (!handlesOn) return;
+  const nh = hitHandle(e);
+  if (nh!==hovH) {
+    if (hovH && hovH !== activeH) setHandleVisual(hovH, 'idle');
+    hovH = nh;
+    if (hovH && hovH !== activeH) setHandleVisual(hovH, 'hover');
+    renderer.domElement.style.cursor = nh ? 'grab' : '';
+  }
+});
+
+window.addEventListener('pointerup', e => {
+  if (drag) {
+    ctrl.enabled = true;
+    tip.style.display = 'none';
+    renderer.domElement.style.cursor = hovH ? 'grab' : '';
+    if (cf()) syncPushAngles(cf().angles);
+    syncEditing = false;
+    renderer.domElement.releasePointerCapture?.(e.pointerId);
+    drag = null;
+  }
+});
+
+renderer.domElement.addEventListener('wheel', e => {
+  if (!handlesOn) return;
+  const mesh = hitHandle(e);
+  if (!mesh) return;
+  e.stopPropagation();
+  e.preventDefault();
+  setActiveHandle(mesh);
+  const step = e.shiftKey ? 1 : 5;
+  const current = cf()?.angles[mesh.userData.ch] ?? 90;
+  const next = current + (e.deltaY < 0 ? step : -step);
+  commitHandleAngle(mesh.userData.ch, next);
+  tip.style.display = 'block';
+  tip.textContent = `CH${mesh.userData.ch} ${CH[mesh.userData.ch]}: ${clampAngle(next)}°`;
+}, { passive:false, capture:true });
+
+renderer.domElement.addEventListener('dblclick', e => {
+  if (!handlesOn) return;
+  const mesh = hitHandle(e);
+  if (!mesh) return;
+  e.stopPropagation();
+  e.preventDefault();
+  setActiveHandle(mesh);
+  commitHandleAngle(mesh.userData.ch, 90);
+  tip.style.display = 'block';
+  tip.textContent = `CH${mesh.userData.ch} ${CH[mesh.userData.ch]}: 90°`;
+}, { capture:true });
+
+// ── API / Live Sync ────────────────────────────────────────────────────────────
+let ip = document.getElementById('ip').value.trim();
+let deviceConnected = false;
+let syncOn = false, syncTid = null;
+let syncEditing = false;
+let syncPushTid = null;
+let lastLocalPushMs = 0;
+const SYNC_PULL_GUARD_MS = 200;
+
+const apiFetch = (path, opts={}) =>
+  fetch(`http://${ip}${path}`, {...opts, cache:'no-store', signal:AbortSignal.timeout(3000)}).then(r=>r.json());
+
+async function pushAnglesToDevice(angles) {
+  if (!deviceConnected || !syncOn) return;
+  try {
+    await fetch(`http://${ip}/angles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ angles }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(800),
+    });
+    lastLocalPushMs = performance.now();
+  } catch (_) {}
+}
+
+function syncPushAngles(angles) {
+  if (!deviceConnected || !syncOn) return;
+  clearTimeout(syncPushTid);
+  syncPushTid = setTimeout(() => pushAnglesToDevice(angles), 35);
+}
+
+async function pollStatus() {
+  if (!syncOn) return;
+  const t0 = performance.now();
+  try {
+    const s = await fetch(`http://${ip}/status`, { cache:'no-store', signal: AbortSignal.timeout(600) }).then(r=>r.json());
+    const pullGuard = syncEditing || lPlay || (performance.now() - lastLocalPushMs < SYNC_PULL_GUARD_MS);
+    if (!pullGuard && Array.isArray(s.angles)) {
+      applyAngles(s.angles);
+      setDisplay(s.angles);
+      if (cf()) {
+        cf().angles = [...s.angles];
+        renderTL();
+      }
+    }
+    const mode = syncEditing ? 'edit→robot' : (pullGuard ? 'hold' : 'pull');
+    document.getElementById('dot').className = 'dot ' + (s.walking ? 'walk' : 'ok');
+    document.getElementById('stxt').textContent = s.walking
+      ? `Walk: ${s.activeName} [${s.loopIndex}] (${mode})`
+      : `Live Sync (${mode})`;
+  } catch (_) {
+    document.getElementById('stxt').textContent = 'Sync lost';
+    document.getElementById('dot').className = 'dot';
+  }
+  if (syncOn) syncTid = setTimeout(pollStatus, Math.max(0, 16 - (performance.now() - t0)));
+}
+
+function startSync() {
+  if (!deviceConnected) return;
+  syncOn = true;
+  document.getElementById('btn-sync').classList.add('on');
+  document.getElementById('btn-sync').textContent = 'Live Sync ON';
+  pollStatus();
+}
+function stopSync() {
+  syncOn = false;
+  syncEditing = false;
+  clearTimeout(syncTid);
+  clearTimeout(syncPushTid);
+  document.getElementById('btn-sync').classList.remove('on');
+  document.getElementById('btn-sync').textContent = 'Live Sync';
+}
+
+document.getElementById('btn-sync').addEventListener('click', () => {
+  if (!deviceConnected) return;
+  if (!syncOn) startSync();
+});
+const minUsEl = document.getElementById('minUs');
+const maxUsEl = document.getElementById('maxUs');
+
+function nudgePulse(el, delta, lo, hi) {
+  el.value = String(Math.round(Math.max(lo, Math.min(hi, (+el.value || 0) + delta))));
+}
+
+async function fetchPulseRange() {
+  const j = await apiFetch('/range');
+  if (j.min != null) minUsEl.value = j.min;
+  if (j.max != null) maxUsEl.value = j.max;
+}
+
+async function applyPulseRange() {
+  ip = document.getElementById('ip').value.trim();
+  const min = +minUsEl.value;
+  const max = +maxUsEl.value;
+  if (min >= max) {
+    document.getElementById('stxt').textContent = 'Min < Max にしてください';
+    return;
+  }
+  document.getElementById('stxt').textContent = 'Writing range…';
+  try {
+    const j = await apiFetch(`/range?min=${min}&max=${max}`);
+    minUsEl.value = j.min;
+    maxUsEl.value = j.max;
+    document.getElementById('dot').className = 'dot ok';
+    document.getElementById('stxt').textContent = `Range ${j.min}–${j.max} μs (saved)`;
+    if (cf()) syncPushAngles(cf().angles);
+  } catch (e) {
+    document.getElementById('stxt').textContent = 'Range failed';
+    document.getElementById('dot').className = 'dot';
+  }
+}
+
+document.getElementById('min-m').onclick = () => nudgePulse(minUsEl, -10, 400, 1500);
+document.getElementById('min-p').onclick = () => nudgePulse(minUsEl, 10, 400, 1500);
+document.getElementById('max-m').onclick = () => nudgePulse(maxUsEl, -10, 1500, 2600);
+document.getElementById('max-p').onclick = () => nudgePulse(maxUsEl, 10, 1500, 2600);
+document.getElementById('btn-range').onclick = applyPulseRange;
+
+async function loadMotionFromDevice(name) {
+  try {
+    const preset = await apiFetch(`/motion?name=${encodeURIComponent(name)}`);
+    if (preset && preset.frames) {
+      em = {
+        name: preset.name || name,
+        frames: preset.frames.map(f => ({ ms: f.ms, angles: [...f.angles] })),
+      };
+      document.getElementById('tl-name').value = em.name;
+      applyFrame(0);
+    }
+  } catch (e) {
+    console.error("Failed to load motion from device: " + e.message);
+  }
+}
+
+async function connectDevice() {
+  ip = document.getElementById('ip').value.trim();
+  document.getElementById('stxt').textContent = 'Connecting…';
+  deviceConnected = false;
+  stopSync();
+  try {
+    const c = await apiFetch('/motions');
+    await fetchPulseRange();
+    deviceConnected = true;
+    document.getElementById('dot').className = 'dot ok';
+    document.getElementById('stxt').textContent = `OK — ${c.count} motions`;
+    await loadMotionFromDevice('walk');
+    startSync();
+  } catch (e) {
+    deviceConnected = false;
+    document.getElementById('stxt').textContent = 'Failed: ' + e.message;
+    document.getElementById('dot').className = 'dot';
+  }
+}
+
+document.getElementById('btn-conn').addEventListener('click', connectDevice);
+
+// ── Render loop ────────────────────────────────────────────────────────────────
+let fc=0, ft=performance.now();
+const fpsEl = document.getElementById('fps');
+(function loop() {
+  requestAnimationFrame(loop);
+  ctrl.update();
+  renderer.render(scene, camera);
+  if (++fc, performance.now()-ft>1000) { fpsEl.textContent=fc+' fps'; fc=0; ft=performance.now(); }
+})();
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+renderTL();
+connectDevice();
+</script>
+</body>
+</html>
